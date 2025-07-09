@@ -14,23 +14,18 @@ gestionUsuarios = gestionPedidosUsuarios(proxxy,gestionDescuentosVariable)
 gestionDueno = gestionPedidosDueno(proxxy,gestionDescuentosVariable)
 
 
-
-def comprando(usuario):
-    Nombre = ""
-
+@app.request('/comprar/<idUsuario/<nombre>/<cantidad>')
+def comprando(idUsuario, nombre, cantidad):
     while (Nombre != "comprar" and Nombre != "salir"):
         carro.mostrarStock()
-        print("ingrese items al carrito, luego para pagar ingrese 'comprar' para salir ingrese 'salir'")
-        Nombre = input("ingrese el nombre \n")
-        Nombre = Nombre.strip()
-        Cantidad = input("ingrese la cantidad \n")
+        Nombre = nombre.strip()
         try:
-            Cantidad = int(Cantidad)
+            cantidad = int(cantidad)
         except ValueError:
             print("La cadena no representa un número entero válido")
 
         if (Nombre != "comprar" and Nombre != "salir") and carro.existe(Nombre,Cantidad):
-            carro.agregarItem(Nombre,Cantidad)
+            carro.agregarItem(Nombre,cantidad)
         carro.mostrarCarrito()
     if(carro.mostrarCarrito() and Nombre == "comprar"):
         envio = input("Ingrese tipo de envio (internacional,programado,express,estandar)\n")
@@ -38,33 +33,25 @@ def comprando(usuario):
         envio3 = input("ingrese region\n")
         calcularEnvio1 = calcularEnvio(envio2,envio3)
         print(f"precio de envio = {calcularEnvio1.getprecioEnvio()}")
-        idPedido = gestionUsuarios.nuevoPedido(usuario.getidUsuario(),usuario.getDireccion(),carro.comprarCarrito(),calcularEnvio1,envio)
+        user = proxxy.buscarUsuario(idUsuario)
+        idPedido = gestionUsuarios.nuevoPedido(idUsuario,user.getDireccion(),carro.comprarCarrito(),calcularEnvio1,envio)
 
+        return idPedido, 200
+    return 400
 
-        print(f"idPedido = {idPedido}")
-        return 1
-    return 0
+@app.route('/pagar/<idPedido>/<pago>')
+def pagar(idPedido, pago):
+    pedido = proxxy.recuperarPedido(idPedido)
+    idUsuario = pedido.getidUsuario()
+    result = gestionUsuarios.pagarPedido(idPedido,idUsuario,pago)
+    return result
+@app.route('/cancelar/<idPedido>')
+def cancelar(idPedido):
+    result = gestionUsuarios.cancelarPedido(idPedido)
+    return result
 
-
-def pagar(usuario):
-    id = int(input("Ingrese el id del pedido a pagar:\n"))
-    pago = (input("Ingrese el tipo de pago (transferencia, tarjeta, entrega, cripto, qr):\n"))
-    result = gestionUsuarios.pagarPedido(id,usuario.getidUsuario(),pago)
-    return 0
-def cancelar(usuario):
-    id = int(input("Ingrese el id del pedido a cancelar:\n"))
-    result = gestionUsuarios.cancelarPedido(id)
-    if(result):
-        print("cancelado de manera satisfactoria")
-    return 0
-
-
-
-def inicializar():
-
-    nombre = input("Ingrese su nombre:\n")
-    direccion = input("Ingrese su direccion:\n")
-    tipo = input("ingrese tipo de cliente (nuevo, frecuente, vip):\n")
+@app.route('/usuario/<operacion>/<eleccion>/<nombre>/<direccion>/<tipo>', methods=["POST"])
+def inicializar(nombre, direccion, tipo, operacion):
     id = datos.nuevoUsuario(nombre,direccion,tipo)
     usuario = proxxy.buscarUsuario(id)
     #para pruebas
@@ -72,9 +59,11 @@ def inicializar():
     #calcularEnvio1 = calcularEnvio("nacional", "centro")
     #idPedido = gestionUsuarios.nuevoPedido(usuario.getidUsuario(), usuario.getDireccion(), carro.comprarCarrito(),calcularEnvio1, envio)
     entrada = "9"
+    if operacion == "0": # Pago
+        data = proxxy.mostrarPedidosUsuario(id)
+        
     while(entrada != "2"):
-        us = input("0 para usuario, 1 para dueño ,2 para salir:\n")
-        if us == "0":
+        if operacion == "0":
 
             entradaUsuario = "5"
 
@@ -95,7 +84,7 @@ def inicializar():
                         break
                     case _:
                         print("entrada invalida")
-        elif us == "1":
+        elif operacion == "1":
             entradaUsuario = "5"
             while(entradaUsuario != "4"):
                 print("Pedidos en el sistema: ")

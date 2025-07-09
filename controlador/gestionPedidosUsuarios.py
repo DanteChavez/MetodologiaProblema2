@@ -101,10 +101,10 @@ class gestionPedidosUsuarios(gestionPedidos):
         retorno = self.recuperarPedido(idPedido)
         if (retorno != 0 and retorno.getestado() != "cancelado"):
             retorno.setestado("cancelado")
-            return 1
+            return 200
         else:
             print("No se encuentra el pedido o ya esta cancelado")
-            return 0
+            return 404
 
 #gestionPedidosUsuarios realiza muchas acciones: gestionar pedidos, calcular descuentos, manejar pagos, etc.
     def pagarPedido(self, idPedido, idUsuario,tipoPago):
@@ -130,10 +130,10 @@ class gestionPedidosUsuarios(gestionPedidos):
             elif(res == 200 ):
                 print("Pago completado")
                 pedido.setestado("pagado")
-            return 1
+            return 201
         else:
             print("No se pudo completar el pago")
-            return 0
+            return 400
 
     def mostrarPrecioCarrito(self, carrito):
         resultado = [0,0,0,0,0]
