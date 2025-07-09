@@ -5,6 +5,12 @@ from controlador.pagar import *
 
 
 class gestionPedidosUsuarios(gestionPedidos):
+    _instancia = None
+
+    def __new__(cls):
+        if cls._instancia is None:
+            cls._instancia = super().__new__(cls)
+        return cls._instancia
     def __init__(self,datos,descuentos):
         self.datos = datos #la bd
         self.idConteo = 1

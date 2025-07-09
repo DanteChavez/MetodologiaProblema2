@@ -2,6 +2,12 @@ from controlador.gestionPedidos import gestionPedidos
 
 
 class gestionPedidosDueno(gestionPedidos):
+    _instancia = None
+
+    def __new__(cls):
+        if cls._instancia is None:
+            cls._instancia = super().__new__(cls)
+        return cls._instancia
     def __init__(self,datos,descuentos):
         self.datos = datos
         self.descuentos = descuentos
