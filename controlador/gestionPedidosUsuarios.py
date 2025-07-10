@@ -18,18 +18,18 @@ class gestionPedidosUsuarios(gestionPedidos):
     #recuperar pedido por id
     def recuperarPedido(self, idPedido):
         pedido = self.datos.recuperarPedido(idPedido)
-        if(pedido != 0):
+        if(pedido != 404):
             return pedido
         else:
             print("Pedido no existe")
-            return 0
+            return 404
 
     #Ingresa los datos para un nuevo pedido, si el retorno es 0 se produjo un error
     #de lo contrario se retorna el idPedido
     def nuevoPedido(self,idUsuario, direccion, carro, precioEnvio, tipoEnvio):
-        if(self.datos.buscarUsuario(idUsuario) == 0):
+        if(self.datos.buscarUsuario(idUsuario) == 404):
             print("Usuario no existe")
-            return 0
+            return 404
         nuevaCompra = ""
         precioCarro = self.mostrarPrecioCarrito(carro)
         precioEnvio2 = precioEnvio.getprecioEnvio()
@@ -60,14 +60,14 @@ class gestionPedidosUsuarios(gestionPedidos):
                 nuevaCompra = estandar(idUsuario, direccion, self.idConteo, "pendiente", carro, precioEnvio, boleta)
             case _:
                 print("wtf?")#TODO devolver items al carrito
-                return 0
+                return 400
         self.idConteo += 1
         print("Pedido agregado de manera satisfactoria :D")
         self.datos.agregarPedido(nuevaCompra)
         return self.idConteo-1
     def modificarPedido(self, idPedido,operacion,cambio):
         retorno = self.recuperarPedido(idPedido)
-        if(retorno != 0 and retorno.getestado() != "cancelado"):
+        if(retorno != 404 and retorno.getestado() != "cancelado"):
             #1 cambiar direccion
             #2 cambiar estado
             #3 cambiar productos
@@ -90,8 +90,8 @@ class gestionPedidosUsuarios(gestionPedidos):
 
                 case _:
                     print("modificacion NO valida")
-                    return 0
-            return 1
+                    return 400
+            return 200
 
         else:
             print("No se encuentra el pedido o esta cancelado")
@@ -110,7 +110,7 @@ class gestionPedidosUsuarios(gestionPedidos):
     def pagarPedido(self, idPedido, idUsuario,tipoPago):
         usuario = self.datos.buscarUsuario(idUsuario)
         pedido = self.datos.recuperarPedido(idPedido)
-        if(pedido != 0 and usuario != 0 and pedido.getestado() == "pendiente" ):
+        if(pedido != 404 and usuario != 404 and pedido.getestado() == "pendiente" ):
             res = 0
             fabrica = None
             match tipoPago:

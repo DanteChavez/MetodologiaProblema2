@@ -27,7 +27,7 @@ class gestionPedidosDueno(gestionPedidos):
             return jsonify(pedido_json), 200
         else:
             print("Pedido no existe")
-            return 0
+            return 404
 
 
     def modificarPedido(self, idPedido,operacion,cambio):
