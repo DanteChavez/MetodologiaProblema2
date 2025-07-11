@@ -83,13 +83,31 @@ def test_all_methods():
         if response.status_code == 201:
             response_data = response.json()
             if 'pedido' in response_data and 'idPedido' in response_data['pedido']:
-                pedido_id_creado = response_data['pedido']['idPedido']
+                id_raw = response_data['pedido']['idPedido']
+                # El servidor devuelve [ID, status_code], extraer solo el ID
+                if isinstance(id_raw, list) and len(id_raw) > 0:
+                    pedido_id_creado = id_raw[0]  # Tomar solo el primer elemento
+                else:
+                    pedido_id_creado = id_raw  # Si no es lista, usar directamente
                 print(f"   📋 Pedido creado con ID: {pedido_id_creado}")
+            else:
+                print(f"   ⚠️  Estructura inesperada. Claves: {list(response_data.keys())}")
     except Exception as e:
         print(f"   ⚠️  POST /api/pedidos - Error: {e}")
     
     # 3. PUT - Actualizar recursos
     print("\n✏️ PROBANDO PUT:")
+    
+    # Debug: Verificar que el pedido existe
+    if pedido_id_creado:
+        try:
+            debug_response = requests.get(f"{BASE_URL}/debug/pedidos")
+            if debug_response.status_code == 200:
+                debug_data = debug_response.json()
+                print(f"   🔍 Debug - Pedidos en proxy: {debug_data.get('proxy_instance_pedidos', {})}")
+                print(f"   🔍 Debug - Pedidos en bd: {debug_data.get('bd_instance_pedidos', {})}")
+        except:
+            pass  # Ignorar errores de debug
     
     # PUT Producto - CORREGIDO para usar la estructura real
     producto_update = {

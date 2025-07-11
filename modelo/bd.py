@@ -17,7 +17,9 @@ class bd():
         if not hasattr(pedido, 'getidPedido'):
             #raise ValueError("El objeto no parece ser un Pedido válido")
             return 400
-        self.listaPedidos[pedido.getidPedido()] = pedido
+        # getidPedido() devuelve (id, status_code), necesitamos solo el id
+        pedido_id = pedido.getidPedido()[0] if isinstance(pedido.getidPedido(), tuple) else pedido.getidPedido()
+        self.listaPedidos[pedido_id] = pedido
         return 200
     def recuperarPedido(self, idPedido):
         if idPedido not in self.listaPedidos:

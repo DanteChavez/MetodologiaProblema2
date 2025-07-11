@@ -115,7 +115,19 @@ def obtener_pedidos():
     try:
         pedidos_list = []
         
-        if bd_instance and hasattr(bd_instance, 'listaPedidos'):
+        # Buscar pedidos en proxy_instance primero
+        if proxy_instance and hasattr(proxy_instance, 'listaPedidos'):
+            for pedido_id, pedido in proxy_instance.listaPedidos.items():
+                pedidos_list.append({
+                    'idPedido': pedido.getidPedido(),
+                    'idUsuario': pedido.getidUsuario(),
+                    'direccion': pedido.getdireccion(),
+                    'estado': pedido.getestado(),
+                    'productos': pedido.getproductos()
+                })
+        
+        # Si no hay pedidos en proxy, buscar en bd_instance
+        if not pedidos_list and bd_instance and hasattr(bd_instance, 'listaPedidos'):
             for pedido_id, pedido in bd_instance.listaPedidos.items():
                 pedidos_list.append({
                     'idPedido': pedido.getidPedido(),
@@ -321,13 +333,32 @@ def actualizar_pedido(pedido_id):
         if not data:
             return jsonify({'error': 'No se recibieron datos'}), 400
         
-        # Buscar pedido
+        # Buscar pedido (primero en proxy, luego en bd)
         pedido_encontrado = None
-        if bd_instance and hasattr(bd_instance, 'listaPedidos'):
-            for pedido_id, pedido in bd_instance.listaPedidos.items():
-                if pedido.getidPedido() == pedido_id:
-                    pedido_encontrado = pedido
-                    break
+        
+        # Buscar en proxy primero (cache)
+        if proxy_instance and hasattr(proxy_instance, 'listaPedidos'):
+            if pedido_id in proxy_instance.listaPedidos:
+                pedido_encontrado = proxy_instance.listaPedidos[pedido_id]
+            else:
+                for pedido_key, pedido in proxy_instance.listaPedidos.items():
+                    # getidPedido() devuelve (valor, status_code), necesitamos solo el valor
+                    pedido_id_actual = pedido.getidPedido()[0] if isinstance(pedido.getidPedido(), tuple) else pedido.getidPedido()
+                    if pedido_id_actual == pedido_id:
+                        pedido_encontrado = pedido
+                        break
+        
+        # Si no se encontró en proxy, buscar en bd_instance
+        if not pedido_encontrado and bd_instance and hasattr(bd_instance, 'listaPedidos'):
+            if pedido_id in bd_instance.listaPedidos:
+                pedido_encontrado = bd_instance.listaPedidos[pedido_id]
+            else:
+                for pedido_key, pedido in bd_instance.listaPedidos.items():
+                    # getidPedido() devuelve (valor, status_code), necesitamos solo el valor
+                    pedido_id_actual = pedido.getidPedido()[0] if isinstance(pedido.getidPedido(), tuple) else pedido.getidPedido()
+                    if pedido_id_actual == pedido_id:
+                        pedido_encontrado = pedido
+                        break
         
         if not pedido_encontrado:
             return jsonify({'error': 'Pedido no encontrado'}), 404
@@ -411,15 +442,32 @@ def actualizar_producto(producto_codigo):
 def eliminar_pedido(pedido_id):
     """Eliminar un pedido"""
     try:
-        # Buscar y eliminar pedido
+        # Buscar y eliminar pedido (primero en proxy, luego en bd)
         pedido_eliminado = None
-        if bd_instance and hasattr(bd_instance, 'listaPedidos'):
+        
+        # Buscar en proxy primero
+        if proxy_instance and hasattr(proxy_instance, 'listaPedidos'):
+            if pedido_id in proxy_instance.listaPedidos:
+                pedido_eliminado = proxy_instance.listaPedidos.pop(pedido_id)
+            else:
+                # Buscar por ID del pedido
+                for key, pedido in list(proxy_instance.listaPedidos.items()):
+                    # getidPedido() devuelve (valor, status_code), necesitamos solo el valor
+                    pedido_id_actual = pedido.getidPedido()[0] if isinstance(pedido.getidPedido(), tuple) else pedido.getidPedido()
+                    if pedido_id_actual == pedido_id:
+                        pedido_eliminado = proxy_instance.listaPedidos.pop(key)
+                        break
+        
+        # Si no se encontró en proxy, buscar en bd_instance
+        if not pedido_eliminado and bd_instance and hasattr(bd_instance, 'listaPedidos'):
             if pedido_id in bd_instance.listaPedidos:
                 pedido_eliminado = bd_instance.listaPedidos.pop(pedido_id)
             else:
-                # Buscar por ID del pedido (en caso de que la clave no coincida)
+                # Buscar por ID del pedido
                 for key, pedido in list(bd_instance.listaPedidos.items()):
-                    if pedido.getidPedido() == pedido_id:
+                    # getidPedido() devuelve (valor, status_code), necesitamos solo el valor
+                    pedido_id_actual = pedido.getidPedido()[0] if isinstance(pedido.getidPedido(), tuple) else pedido.getidPedido()
+                    if pedido_id_actual == pedido_id:
                         pedido_eliminado = bd_instance.listaPedidos.pop(key)
                         break
         
@@ -488,13 +536,32 @@ def cambiar_estado_pedido(pedido_id):
         if not data or 'estado' not in data:
             return jsonify({'error': 'Se requiere el campo estado'}), 400
         
-        # Buscar pedido
+        # Buscar pedido (primero en proxy, luego en bd)
         pedido_encontrado = None
-        if bd_instance and hasattr(bd_instance, 'listaPedidos'):
-            for pedido_id_key, pedido in bd_instance.listaPedidos.items():
-                if pedido.getidPedido() == pedido_id:
-                    pedido_encontrado = pedido
-                    break
+        
+        # Buscar en proxy primero (cache)
+        if proxy_instance and hasattr(proxy_instance, 'listaPedidos'):
+            if pedido_id in proxy_instance.listaPedidos:
+                pedido_encontrado = proxy_instance.listaPedidos[pedido_id]
+            else:
+                for pedido_id_key, pedido in proxy_instance.listaPedidos.items():
+                    # getidPedido() devuelve (valor, status_code), necesitamos solo el valor
+                    pedido_id_actual = pedido.getidPedido()[0] if isinstance(pedido.getidPedido(), tuple) else pedido.getidPedido()
+                    if pedido_id_actual == pedido_id:
+                        pedido_encontrado = pedido
+                        break
+        
+        # Si no se encontró en proxy, buscar en bd_instance
+        if not pedido_encontrado and bd_instance and hasattr(bd_instance, 'listaPedidos'):
+            if pedido_id in bd_instance.listaPedidos:
+                pedido_encontrado = bd_instance.listaPedidos[pedido_id]
+            else:
+                for pedido_id_key, pedido in bd_instance.listaPedidos.items():
+                    # getidPedido() devuelve (valor, status_code), necesitamos solo el valor
+                    pedido_id_actual = pedido.getidPedido()[0] if isinstance(pedido.getidPedido(), tuple) else pedido.getidPedido()
+                    if pedido_id_actual == pedido_id:
+                        pedido_encontrado = pedido
+                        break
         
         if not pedido_encontrado:
             return jsonify({'error': 'Pedido no encontrado'}), 404
