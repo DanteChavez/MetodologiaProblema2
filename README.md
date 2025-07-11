@@ -4,7 +4,6 @@ Sistema completo de e-commerce con API REST, implementando 3 patrones de diseño
 
 ## 👥 Integrantes
 
-<<<<<<< rest
 - Dante Chavez
 - Nikolas Lagos  
 - Franko Moraga
@@ -16,9 +15,6 @@ Sistema completo de e-commerce con API REST, implementando 3 patrones de diseño
 - flask-cors
 - requests
 
-
-Integrantes:
->>>>>>> main
 
 ### API REST (Puerto 5000)
 - **Gestión de Usuarios**: Crear, consultar usuarios (GET, POST)
