@@ -10,7 +10,7 @@ Sistema completo de e-commerce con API REST, implementando 3 patrones de diseño
 - Gabriel Oneto
 
 ## 🏗️ Funcionalidades
-=======
+
 - flask
 - flask-cors
 - requests
