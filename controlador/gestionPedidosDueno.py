@@ -1,5 +1,5 @@
 from controlador.gestionPedidos import gestionPedidos
-
+from flask import Flask, app, jsonify, request
 
 class gestionPedidosDueno(gestionPedidos):
     _instancia = None
@@ -11,14 +11,23 @@ class gestionPedidosDueno(gestionPedidos):
     def __init__(self,datos,descuentos):
         self.datos = datos
         self.descuentos = descuentos
-
+    
+    @app.route("/pedidos/dueno/<idPedido>")
     def recuperarPedido(self, idPedido):
         pedido = self.datos.recuperarPedido(idPedido)
+        pedido_json = {'idUsuario':pedido.getidUsuario(),
+                       'dirección':pedido.getDireccion(),
+                       'idPedido':pedido.getPedido(),
+                       'estado':pedido.getestado(),
+                       'productos pagados':pedido.getproductos(),
+                       'precio envío':pedido.getpecioEnvioPedido()
+                       }
         if(pedido != 0):
-            return pedido
+
+            return jsonify(pedido_json), 200
         else:
             print("Pedido no existe")
-            return 0
+            return 404
 
 
     def modificarPedido(self, idPedido,operacion,cambio):
