@@ -3,9 +3,9 @@
 
 Dependencias: 
 
-- flask==2.3.3
-- flask-cors==4.0.0
-- requests==2.31.0
+- flask
+- flask-cors
+- requests
 
 
 Integrantes:
