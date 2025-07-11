@@ -1,4 +1,3 @@
-from flask import Flask, app, jsonify, request
 class usuario():
     def __init__(self,idUsuario,nombre,direccion,tipoCliente):
         self.idUsuario = idUsuario
@@ -9,8 +8,9 @@ class usuario():
 #
 #Este no es tan importante, hacer al final
         self.compras = {}
-        
-    #nuevo frecuente vip)
+
+    #nuevo frecuente vip
+
     def getidUsuario(self):
         return self.idUsuario
     def getnombre(self):

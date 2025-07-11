@@ -1,5 +1,5 @@
 from abc import ABC
-from flask import Flask, app, jsonify, request
+
 
 class pedido:
     def __init__(self,idUsuario,direccion ,idPedido, estado, productos,precioEnvio, factura):
@@ -12,27 +12,28 @@ class pedido:
         self.tipoEnvio = None   #string
         self.precioEnvio = precioEnvio  #clase calcularEnvio
         self.factura = factura
-        
+
     def saludar(self):
         print("funcionaaaaa!!!!")
+
     def getidUsuario(self):
-        return self.idUsuario, 200
+        return self.idUsuario
 
     def getdireccion(self):
-        return self.direccion, 200
+        return self.direccion
 
     def getidPedido(self):
-        return self.idPedido, 200
+        return self.idPedido
     #pendiente, pagado, preparacion, enviado, entregado, cancelado.
     def getestado(self):
-        return self.estado, 200
+        return self.estado
 
     def getproductos(self):
-        return self.productos, 200
+        return self.productos
 
 
     def getproductosPagados(self):
-        return self.productosPagados, 200
+        return self.productosPagados
 
 
     def setproductosPagados(self,productos):

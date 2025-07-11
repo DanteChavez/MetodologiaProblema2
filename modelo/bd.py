@@ -1,59 +1,59 @@
 from modelo.usuario import *
 class bd():
     _instancia = None
-    def __new__(cls):
-        if cls._instancia is None:
-            cls._instancia = super().__new__(cls)
-        return cls._instancia
-    
     def __init__(self):
         self.listaPedidos = {}
         self.listaUsuarios = {}
         self.idContadorUsuarios = 1
 
 
+    def __new__(cls):
+        if cls._instancia is None:
+            cls._instancia = super().__new__(cls)
+        return cls._instancia
 
     def agregarPedido(self, pedido):
         if not hasattr(pedido, 'getidPedido'):
             #raise ValueError("El objeto no parece ser un Pedido válido")
-            return 400
-        # getidPedido() devuelve (id, status_code), necesitamos solo el id
-        pedido_id = pedido.getidPedido()[0] if isinstance(pedido.getidPedido(), tuple) else pedido.getidPedido()
-        self.listaPedidos[pedido_id] = pedido
-        return 200
+            return 0
+        self.listaPedidos[pedido.getidPedido()] = pedido
+        return 1
     def recuperarPedido(self, idPedido):
         if idPedido not in self.listaPedidos:
-            return 404
-        return jsonify(self.listaPedidos[idPedido]), 200
+            #raise KeyError(f"No existe un pedido con ID {idPedido}")
+            return 0
+        return self.listaPedidos[idPedido]
 
     def mostrarPedidos(self):
-        retorno = {}
         if not self.listaPedidos:
-            return 404
+            print("No hay pedidos registrados")
+            return 0
 
+        print("Pedidos almacenados:")
         for id_pedido in self.listaPedidos:
-            retorno.update({"ID":id_pedido,"estado" :self.listaPedidos[id_pedido].estado})
-            return jsonify(retorno), 200
+            print(f"- ID: {id_pedido} \t estado : {self.listaPedidos[id_pedido].estado}")
+
     def mostrarPedidosUsuario(self,idUsuario):
         if not self.listaPedidos:
-            return 404
+            print("No hay pedidos registrados")
+            return
 
+        print("Pedidos almacenados:")
         for id_pedido in self.listaPedidos:
             rec = self.listaPedidos[id_pedido]
             if(idUsuario == rec.getidUsuario()):
-                retorno = {"ID:":id_pedido,"estado:":self.listaPedidos[id_pedido].estado,"precio":self.listaPedidos[id_pedido].gettotalReal()}
-                return jsonify(retorno), 200 
+                print(f"- ID: {id_pedido} \t estado : {self.listaPedidos[id_pedido].estado} \t precio : {self.listaPedidos[id_pedido].gettotalReal()}")
     #esto es como para simular guardar usuarios en la "base de datos"
     #es mas que nada para que sea global
     def nuevoUsuario(self,nombre, direccion, tipoCliente):
         nuevo = usuario(self.idContadorUsuarios,nombre,direccion, tipoCliente)
         self.idContadorUsuarios = self.idContadorUsuarios + 1
         self.listaUsuarios[nuevo.getidUsuario()] = nuevo
-        return self.idContadorUsuarios-1, 201
+        return self.idContadorUsuarios-1
 
     def buscarUsuario(self,idUsuario):
         if idUsuario in self.listaUsuarios:
-            return jsonify(self.listaUsuarios[idUsuario]), 200
+            return self.listaUsuarios[idUsuario]
         else:
             print(f"No hay usuario registrado en la base de datos con la id: {idUsuario} ")
-            return 404
+            return 0

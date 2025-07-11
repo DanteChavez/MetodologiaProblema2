@@ -5,45 +5,25 @@ from controlador.pagar import *
 
 
 class gestionPedidosUsuarios(gestionPedidos):
-    _instancia = None
-
-    def __new__(cls):
-        if cls._instancia is None:
-            cls._instancia = super().__new__(cls)
-        return cls._instancia
-    def __init__(self, datos=None, descuentos=None):
-        # Importar aquí para evitar imports circulares
-        if datos is None:
-            from modelo.bd import bd
-            from modelo.proxy import proxy
-            bd_instance = bd()
-            datos = proxy(bd_instance)
-        
-        if descuentos is None:
-            try:
-                from controlador.gestionDescuentos import gestionDescuentos
-                descuentos = gestionDescuentos()
-            except:
-                descuentos = None
-                
+    def __init__(self,datos,descuentos):
         self.datos = datos #la bd
         self.idConteo = 1
         self.descuentos = descuentos
     #recuperar pedido por id
     def recuperarPedido(self, idPedido):
         pedido = self.datos.recuperarPedido(idPedido)
-        if(pedido != 404):
+        if(pedido != 0):
             return pedido
         else:
             print("Pedido no existe")
-            return 404
+            return 0
 
     #Ingresa los datos para un nuevo pedido, si el retorno es 0 se produjo un error
     #de lo contrario se retorna el idPedido
     def nuevoPedido(self,idUsuario, direccion, carro, precioEnvio, tipoEnvio):
-        if(self.datos.buscarUsuario(idUsuario) == 404):
+        if(self.datos.buscarUsuario(idUsuario) == 0):
             print("Usuario no existe")
-            return 404
+            return 0
         nuevaCompra = ""
         precioCarro = self.mostrarPrecioCarrito(carro)
         precioEnvio2 = precioEnvio.getprecioEnvio()
@@ -74,14 +54,14 @@ class gestionPedidosUsuarios(gestionPedidos):
                 nuevaCompra = estandar(idUsuario, direccion, self.idConteo, "pendiente", carro, precioEnvio, boleta)
             case _:
                 print("wtf?")#TODO devolver items al carrito
-                return 400
+                return 0
         self.idConteo += 1
         print("Pedido agregado de manera satisfactoria :D")
         self.datos.agregarPedido(nuevaCompra)
         return self.idConteo-1
     def modificarPedido(self, idPedido,operacion,cambio):
         retorno = self.recuperarPedido(idPedido)
-        if(retorno != 404 and retorno.getestado() != "cancelado"):
+        if(retorno != 0 and retorno.getestado() != "cancelado"):
             #1 cambiar direccion
             #2 cambiar estado
             #3 cambiar productos
@@ -104,8 +84,8 @@ class gestionPedidosUsuarios(gestionPedidos):
 
                 case _:
                     print("modificacion NO valida")
-                    return 400
-            return 200
+                    return 0
+            return 1
 
         else:
             print("No se encuentra el pedido o esta cancelado")
@@ -115,16 +95,16 @@ class gestionPedidosUsuarios(gestionPedidos):
         retorno = self.recuperarPedido(idPedido)
         if (retorno != 0 and retorno.getestado() != "cancelado"):
             retorno.setestado("cancelado")
-            return 200
+            return 1
         else:
             print("No se encuentra el pedido o ya esta cancelado")
-            return 404
+            return 0
 
 #gestionPedidosUsuarios realiza muchas acciones: gestionar pedidos, calcular descuentos, manejar pagos, etc.
     def pagarPedido(self, idPedido, idUsuario,tipoPago):
         usuario = self.datos.buscarUsuario(idUsuario)
         pedido = self.datos.recuperarPedido(idPedido)
-        if(pedido != 404 and usuario != 404 and pedido.getestado() == "pendiente" ):
+        if(pedido != 0 and usuario != 0 and pedido.getestado() == "pendiente" ):
             res = 0
             fabrica = None
             match tipoPago:
@@ -144,10 +124,10 @@ class gestionPedidosUsuarios(gestionPedidos):
             elif(res == 200 ):
                 print("Pago completado")
                 pedido.setestado("pagado")
-            return 201
+            return 1
         else:
             print("No se pudo completar el pago")
-            return 400
+            return 0
 
     def mostrarPrecioCarrito(self, carrito):
         resultado = [0,0,0,0,0]
@@ -161,48 +141,6 @@ class gestionPedidosUsuarios(gestionPedidos):
         for clave in carrito:
             precio += carrito[clave] * clave.getprecioUnitario()
         return precio
-
-    # Método simplificado para API REST
-    def crearPedido(self, idUsuario, direccion, productos, estado='pendiente'):
-        """Crear un pedido simplificado para API REST"""
-        try:
-            # Validar que el usuario existe
-            if hasattr(self.datos, 'buscarUsuario'):
-                if self.datos.buscarUsuario(idUsuario) == 404:
-                    print("Usuario no existe")
-                    return 404
-            
-            # Crear pedido simple
-            import random
-            nuevo_id_pedido = random.randint(1000, 9999)
-            
-            nuevo_pedido = pedido(
-                idUsuario,      # idUsuario
-                direccion,      # direccion
-                nuevo_id_pedido, # idPedido
-                estado,         # estado
-                productos,      # productos
-                None,           # precioEnvio
-                None            # factura
-            )
-            
-            # Agregar a la base de datos a través del proxy
-            if hasattr(self.datos, 'agregarPedido'):
-                resultado = self.datos.agregarPedido(nuevo_pedido)
-                if resultado == 200:
-                    return {
-                        'idPedido': nuevo_pedido.getidPedido(),
-                        'idUsuario': nuevo_pedido.getidUsuario(),
-                        'direccion': nuevo_pedido.getdireccion(),
-                        'estado': nuevo_pedido.getestado(),
-                        'productos': nuevo_pedido.getproductos()
-                    }
-            
-            return 400
-            
-        except Exception as e:
-            print(f"Error al crear pedido: {e}")
-            return 400
 
 """
     def pagarPedido(self, idPedido, idUsuario,tipoPago):
