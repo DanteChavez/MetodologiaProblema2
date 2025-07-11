@@ -13,7 +13,7 @@ class proxy():
 
     def buscarUsuario(self, idUsuario):
         if idUsuario in self.listaUsuarios:
-            return self.listaUsuarios[idUsuario]
+            return self.listaUsuarios[idUsuario], 200
         else:
             nuevo = None
             if(len(self.listaUsuarios) > 5):
@@ -21,11 +21,11 @@ class proxy():
                 self.listaUsuarios.pop(borrar)
         nuevo = self.datos.buscarUsuario(idUsuario)
         self.listaUsuarios[idUsuario] = nuevo
-        return nuevo
+        return nuevo, 201
 
     def recuperarPedido(self, idUsuario):
         if idUsuario in self.listaPedidos:
-            return self.listaPedidos[idUsuario]
+            return self.listaPedidos[idUsuario], 200
         else:
             nuevo = None
             if(len(self.listaPedidos) > 5):
@@ -33,7 +33,7 @@ class proxy():
                 self.listaPedidos.pop(borrar)
         nuevo = self.datos.recuperarPedido(idUsuario)
         self.listaPedidos[idUsuario] = nuevo
-        return nuevo
+        return nuevo, 200
 
     def agregarPedido(self, pedido):
         r = self.datos.agregarPedido(pedido)

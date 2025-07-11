@@ -1,0 +1,7 @@
+{
+  "idUsuario": 1,
+  "direccion": "Calle Envío 789, Caracas",
+  "productos": ["Laptop Gaming Pro", "iPhone 15 Pro"],
+  "estado": "pendiente",
+  "precioEnvio": 15.50
+}

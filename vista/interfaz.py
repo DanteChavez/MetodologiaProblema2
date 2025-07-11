@@ -5,32 +5,60 @@ from controlador.gestionPedidosDueno import *
 from controlador.gestionDescuentos import *
 from modelo.inventario import *
 from modelo.carrito import *
+
+# NUEVOS IMPORTS - Sistemas avanzados sin modificar existentes
+from controlador.gestor_central_pedidos import obtener_gestor_central
+from controlador.sistema_beneficios import obtener_gestor_beneficios
+from controlador.calculadora_descuentos_avanzada import crear_calculadora_descuentos_avanzada
+from controlador.factory_tipos_pedido import obtener_factory_tipos_pedido
+
+# FUNCIONES HELPER PARA INICIALIZACIÓN DE SINGLETONS
+def inicializar_singleton_seguro(clase, *args):
+    """Inicializa cualquier Singleton de forma segura"""
+    # Resetear instancia existente
+    if hasattr(clase, '_instancia') and clase._instancia is not None:
+        clase._instancia = None
+    
+    # Crear nueva instancia manualmente
+    instancia = object.__new__(clase)
+    instancia.__init__(*args)
+    clase._instancia = instancia
+    return instancia
+
+# INICIALIZACIÓN DEL SISTEMA
 datos = bd()
 inventario = inventario()
 carro = carrito(inventario)
 proxxy = proxy(datos)
-gestionDescuentosVariable = gestionDescuentos(proxxy)
-gestionUsuarios = gestionPedidosUsuarios(proxxy,gestionDescuentosVariable)
-gestionDueno = gestionPedidosDueno(proxxy,gestionDescuentosVariable)
+
+# Inicializar todos los Singletons de forma segura
+gestionDescuentosVariable = inicializar_singleton_seguro(gestionDescuentos, proxxy)
+gestionUsuarios = inicializar_singleton_seguro(gestionPedidosUsuarios, proxxy, gestionDescuentosVariable)
+gestionDueno = inicializar_singleton_seguro(gestionPedidosDueno, proxxy, gestionDescuentosVariable)
+
+# INICIALIZAR SISTEMAS AVANZADOS
+gestor_central = obtener_gestor_central()
+gestor_beneficios = obtener_gestor_beneficios()
+calculadora_descuentos = crear_calculadora_descuentos_avanzada(gestionDescuentosVariable)
+factory_pedidos = obtener_factory_tipos_pedido()
+
+# Registrar gestores en el sistema central
+gestor_central.registrar_gestor_usuarios(gestionUsuarios)
+gestor_central.registrar_gestor_dueno(gestionDueno)
 
 
-
-def comprando(usuario):
-    Nombre = ""
-
+@app.request('/comprar/<idUsuario/<nombre>/<cantidad>')
+def comprando(idUsuario, nombre, cantidad):
     while (Nombre != "comprar" and Nombre != "salir"):
         carro.mostrarStock()
-        print("ingrese items al carrito, luego para pagar ingrese 'comprar' para salir ingrese 'salir'")
-        Nombre = input("ingrese el nombre \n")
-        Nombre = Nombre.strip()
-        Cantidad = input("ingrese la cantidad \n")
+        Nombre = nombre.strip()
         try:
-            Cantidad = int(Cantidad)
+            cantidad = int(cantidad)
         except ValueError:
             print("La cadena no representa un número entero válido")
 
-        if (Nombre != "comprar" and Nombre != "salir") and carro.existe(Nombre,Cantidad):
-            carro.agregarItem(Nombre,Cantidad)
+        if (Nombre != "comprar" and Nombre != "salir") and carro.existe(Nombre,cantidad):
+            carro.agregarItem(Nombre,cantidad)
         carro.mostrarCarrito()
     if(carro.mostrarCarrito() and Nombre == "comprar"):
         envio = input("Ingrese tipo de envio (internacional,programado,express,estandar)\n")
@@ -38,46 +66,84 @@ def comprando(usuario):
         envio3 = input("ingrese region\n")
         calcularEnvio1 = calcularEnvio(envio2,envio3)
         print(f"precio de envio = {calcularEnvio1.getprecioEnvio()}")
-        idPedido = gestionUsuarios.nuevoPedido(usuario.getidUsuario(),usuario.getDireccion(),carro.comprarCarrito(),calcularEnvio1,envio)
+        # USAR SISTEMA CENTRALIZADO para crear pedido
+        idPedido = gestor_central.crear_pedido_centralizado(
+            usuario.getidUsuario(),
+            usuario.getDireccion(),
+            carro.comprarCarrito(),
+            calcularEnvio1,
+            envio
+        )
+        
+        # MOSTRAR INFORMACIÓN EXTENDIDA del tipo de pedido
+        if idPedido != 0:
+            pedido_creado = gestor_central.consultar_pedido_centralizado(idPedido)
+            tipo_extendido = factory_pedidos.crear_pedido_extendido(envio, pedido_creado)
+            
+            print(f"\n🎯 INFORMACIÓN DEL PEDIDO:")
+            print(f"📦 Tipo: {tipo_extendido.obtener_descripcion_tipo()}")
+            
+            fecha_info = tipo_extendido.calcular_fecha_estimada_entrega()
+            print(f"📅 Entrega estimada: {fecha_info}")
+            
+            condiciones = tipo_extendido.aplicar_condiciones_especiales()
+            print(f"📋 Condiciones especiales:")
+            for i, condicion in enumerate(condiciones, 1):
+                print(f"   {i}. {condicion}")
 
+        return idPedido, 200
+    return 400
 
-        print(f"idPedido = {idPedido}")
-        return 1
-    return 0
-
+@app.route('/pagar/<idPedido>/<pago>')
+def pagar(idPedido, pago):
+    pedido = proxxy.recuperarPedido(idPedido)
+    idUsuario = pedido.getidUsuario()
+    result = gestionUsuarios.pagarPedido(idPedido,idUsuario,pago)
+    return result
+@app.route('/cancelar/<idPedido>')
+def cancelar(idPedido):
+    result = gestionUsuarios.cancelarPedido(idPedido)
+    return result
 
 def pagar(usuario):
     id = int(input("Ingrese el id del pedido a pagar:\n"))
     pago = (input("Ingrese el tipo de pago (transferencia, tarjeta, entrega, cripto, qr):\n"))
-    result = gestionUsuarios.pagarPedido(id,usuario.getidUsuario(),pago)
+    
+    # USAR SISTEMA CENTRALIZADO para pagar
+    resultado = gestor_central.pagar_pedido_centralizado(id, usuario.getidUsuario(), pago)
+    
+    if resultado != 0:
+        print("✅ Pago procesado exitosamente")
+    else:
+        print("❌ Error al procesar el pago")
+    
     return 0
+
 def cancelar(usuario):
     id = int(input("Ingrese el id del pedido a cancelar:\n"))
-    result = gestionUsuarios.cancelarPedido(id)
-    if(result):
-        print("cancelado de manera satisfactoria")
+    
+    # USAR SISTEMA CENTRALIZADO para cancelar
+    resultado = gestor_central.cancelar_pedido_centralizado(id, es_dueno=False)
+    
+    if resultado != 0:
+        print("✅ Pedido cancelado exitosamente")
+    else:
+        print("❌ Error al cancelar el pedido")
+    
     return 0
 
-
-
 def inicializar():
-
     nombre = input("Ingrese su nombre:\n")
     direccion = input("Ingrese su direccion:\n")
     tipo = input("ingrese tipo de cliente (nuevo, frecuente, vip):\n")
     id = datos.nuevoUsuario(nombre,direccion,tipo)
     usuario = proxxy.buscarUsuario(id)
-    #para pruebas
-    #envio = "estandar"
-    #calcularEnvio1 = calcularEnvio("nacional", "centro")
-    #idPedido = gestionUsuarios.nuevoPedido(usuario.getidUsuario(), usuario.getDireccion(), carro.comprarCarrito(),calcularEnvio1, envio)
     entrada = "9"
+    operacion = "0"  # Default para usuario normal
+    
     while(entrada != "2"):
-        us = input("0 para usuario, 1 para dueño ,2 para salir:\n")
-        if us == "0":
-
+        if operacion == "0":
             entradaUsuario = "5"
-
             while(entradaUsuario != "4"):
                 proxxy.mostrarPedidosUsuario(id)
                 entradaUsuario = input("1) para realizar un pedido\n"
@@ -95,7 +161,7 @@ def inicializar():
                         break
                     case _:
                         print("entrada invalida")
-        elif us == "1":
+        elif operacion == "1":
             entradaUsuario = "5"
             while(entradaUsuario != "4"):
                 print("Pedidos en el sistema: ")

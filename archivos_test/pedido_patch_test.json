@@ -1,0 +1,6 @@
+{
+  "idUsuario": 1,
+  "direccion": "Calle PATCH Test 123, Maracay",
+  "productos": ["iPhone 15 Pro", "MacBook Pro"],
+  "estado": "pendiente"
+}
