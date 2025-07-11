@@ -11,7 +11,21 @@ class gestionPedidosUsuarios(gestionPedidos):
         if cls._instancia is None:
             cls._instancia = super().__new__(cls)
         return cls._instancia
-    def __init__(self,datos,descuentos):
+    def __init__(self, datos=None, descuentos=None):
+        # Importar aquí para evitar imports circulares
+        if datos is None:
+            from modelo.bd import bd
+            from modelo.proxy import proxy
+            bd_instance = bd()
+            datos = proxy(bd_instance)
+        
+        if descuentos is None:
+            try:
+                from controlador.gestionDescuentos import gestionDescuentos
+                descuentos = gestionDescuentos()
+            except:
+                descuentos = None
+                
         self.datos = datos #la bd
         self.idConteo = 1
         self.descuentos = descuentos
@@ -147,6 +161,48 @@ class gestionPedidosUsuarios(gestionPedidos):
         for clave in carrito:
             precio += carrito[clave] * clave.getprecioUnitario()
         return precio
+
+    # Método simplificado para API REST
+    def crearPedido(self, idUsuario, direccion, productos, estado='pendiente'):
+        """Crear un pedido simplificado para API REST"""
+        try:
+            # Validar que el usuario existe
+            if hasattr(self.datos, 'buscarUsuario'):
+                if self.datos.buscarUsuario(idUsuario) == 404:
+                    print("Usuario no existe")
+                    return 404
+            
+            # Crear pedido simple
+            import random
+            nuevo_id_pedido = random.randint(1000, 9999)
+            
+            nuevo_pedido = pedido(
+                idUsuario,      # idUsuario
+                direccion,      # direccion
+                nuevo_id_pedido, # idPedido
+                estado,         # estado
+                productos,      # productos
+                None,           # precioEnvio
+                None            # factura
+            )
+            
+            # Agregar a la base de datos a través del proxy
+            if hasattr(self.datos, 'agregarPedido'):
+                resultado = self.datos.agregarPedido(nuevo_pedido)
+                if resultado == 200:
+                    return {
+                        'idPedido': nuevo_pedido.getidPedido(),
+                        'idUsuario': nuevo_pedido.getidUsuario(),
+                        'direccion': nuevo_pedido.getdireccion(),
+                        'estado': nuevo_pedido.getestado(),
+                        'productos': nuevo_pedido.getproductos()
+                    }
+            
+            return 400
+            
+        except Exception as e:
+            print(f"Error al crear pedido: {e}")
+            return 400
 
 """
     def pagarPedido(self, idPedido, idUsuario,tipoPago):

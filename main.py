@@ -1,35 +1,43 @@
-from servidor_rest import app
+"""
+MAIN - Sistema UVShop
+====================
+Punto de entrada principal que utiliza la Vista REST simplificada con arquitectura MVC
+"""
+
+from vista.vista_rest_simple import crear_vista_rest_simple
 
 if __name__ == "__main__":
     print("🎉 BIENVENIDO A UVSHOP")
-    print("🎯 SISTEMA DE COMERCIO ELECTRÓNICO - SERVIDOR REST")
+    print("🎯 SISTEMA DE COMERCIO ELECTRÓNICO - ARQUITECTURA MVC")
     print("="*80)
-    print("🚀 Iniciando servidor REST...")
+    print("🏗️ Iniciando con patrón Model-View-Controller (Simplificado)...")
     print("📡 API disponible en: http://localhost:5000/api")
-    print("\n🌐 TODOS LOS ENDPOINTS DISPONIBLES:")
-    print("\n📋 GET (LEER):")
-    print("   • GET    /api - Información de la API")
-    print("   • GET    /api/metodos - Lista TODOS los métodos disponibles")
-    print("   • GET    /api/usuarios - Lista de usuarios")
-    print("   • GET    /api/productos - Lista de productos") 
-    print("   • GET    /api/pedidos - Lista de pedidos")
-    print("   • GET    /api/casos-uso/factory-pedidos - Factory Pattern")
-    print("\n➕ POST (CREAR):")
-    print("   • POST   /api/usuarios - Crear nuevo usuario")
-    print("   • POST   /api/productos - Crear nuevo producto")
-    print("   • POST   /api/pedidos - Crear nuevo pedido")
-    print("\n✏️ PUT (ACTUALIZAR COMPLETO):")
-    print("   • PUT    /api/productos/<id> - Actualizar producto completo")
-    print("   • PUT    /api/pedidos/<id> - Actualizar pedido completo")
-    print("\n🗑️ DELETE (ELIMINAR):")
-    print("   • DELETE /api/productos/<id> - Eliminar producto")
-    print("   • DELETE /api/pedidos/<id> - Eliminar pedido")
-    print("\n🔄 PATCH (ACTUALIZAR PARCIAL):")
-    print("   • PATCH  /api/pedidos/<id>/estado - Cambiar solo estado")
+    print("\n🌐 ARQUITECTURA MVC ESTABLE:")
+    print("\n� VISTA (VIEW):")
+    print("   • vista_rest_simple.py - API REST endpoints estables")
+    print("   • Manejo seguro de HTTP requests/responses")
+    print("   • Serialización JSON robusta")
+    print("\n🎛️ CONTROLADOR (CONTROLLER):")
+    print("   • gestionPedidosUsuarios - Lógica de usuarios (activo)")
+    print("   • proxy - Controlador de acceso a datos (activo)")
+    print("   • Inicialización segura de controladores opcionales")
+    print("\n🗄️ MODELO (MODEL):")
+    print("   • bd.py - Base de datos (Singleton activo)")
+    print("   • proxy.py - Proxy de acceso a datos (activo)")
+    print("   • pedido.py, usuario.py, productos.py - Entidades")
+    print("   • inventario.py - Gestión de inventario (activo)")
     print("="*80)
-    print("💡 TOTAL: 13 endpoints con 5 métodos HTTP (GET, POST, PUT, DELETE, PATCH)")
-    print("🔥 ¡API REST COMPLETA CON CRUD FUNCIONAL!")
+    print("💡 SEPARACIÓN DE RESPONSABILIDADES CORRECTA")
+    print("🔥 ¡ARQUITECTURA MVC ESTABLE Y FUNCIONAL!")
     print("="*80)
     
-    # Iniciar servidor REST
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    try:
+        # Crear e inicializar la vista REST simplificada
+        vista_rest = crear_vista_rest_simple()
+        
+        # Ejecutar el servidor
+        vista_rest.ejecutar(host='0.0.0.0', port=5000, debug=False)
+    except Exception as e:
+        print(f"❌ Error al inicializar el sistema: {e}")
+        print("💡 Verifica que todos los módulos estén correctamente instalados")
+        print("📋 Usa: pip install flask flask-cors")

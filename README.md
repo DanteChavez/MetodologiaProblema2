@@ -12,12 +12,13 @@ Sistema completo de e-commerce con API REST, implementando 3 patrones de diseño
 ## 🏗️ Funcionalidades
 
 ### API REST (Puerto 5000)
-- **Gestión de Usuarios**: Crear, consultar usuarios básicos
-- **Catálogo de Productos**: CRUD completo de productos con inventario
-- **Gestión de Pedidos**: Crear, modificar y consultar pedidos básicos
+- **Gestión de Usuarios**: Crear, consultar usuarios (GET, POST)
+- **Catálogo de Productos**: CRUD completo con inventario (GET, POST, PUT, DELETE)
+- **Gestión de Pedidos**: CRUD completo de pedidos (GET, POST, PUT, DELETE, PATCH)
 - **13 Endpoints** con operaciones CRUD completas
 - **5 Métodos HTTP**: GET, POST, PUT, DELETE, PATCH
-- **Documentación**: `/api/metodos` para endpoints disponibles
+- **Arquitectura MVC**: Implementación correcta del patrón Model-View-Controller
+- **Documentación**: `/api` y `/api/metodos` para información completa
 
 ## 📋 Casos de Uso
 
@@ -68,28 +69,33 @@ Sistema completo de e-commerce con API REST, implementando 3 patrones de diseño
 
 ```
 MetodologiaProblema2/
-├── main.py                         # Punto de entrada principal
-├── servidor_rest.py                # API REST completa
+├── main.py                         # Punto de entrada principal (MVC)
 ├── test_todos_metodos.py           # Tests de la API
 ├── requirements.txt                # Dependencias del proyecto
 ├── README.md                       # Documentación del proyecto
-├── modelo/                         # Clases del dominio
-│   ├── bd.py                       # Base de datos
+├── ARQUITECTURA_MVC.md             # Documentación de arquitectura MVC
+├── vista/                          # Capa de Vista (MVC)
+│   ├── vista_rest.py               # API REST completa (MVC)
+│   ├── vista_rest_simple.py        # API REST simplificada (MVC)
+│   └── interfaz.py                 # Interfaz original de consola
+├── modelo/                         # Capa de Modelo (MVC)
+│   ├── bd.py                       # Base de datos (Singleton)
 │   ├── carrito.py                  # Gestión del carrito
 │   ├── factura.py                  # Sistema de facturación
 │   ├── inventario.py               # Control de inventario
 │   ├── pedido.py                   # Gestión de pedidos
 │   ├── productos.py                # Catálogo de productos
-│   ├── proxy.py                    # Cache de datos
+│   ├── proxy.py                    # Cache de datos (Proxy Pattern)
 │   └── usuario.py                  # Gestión de usuarios
-├── controlador/                    # Lógica de negocio
+├── controlador/                    # Capa de Controlador (MVC)
 │   ├── gestionDescuentos.py        # Cálculo de descuentos
-│   ├── gestionPedidos.py           # Procesamiento de pedidos
+│   ├── gestionPedidos.py           # Procesamiento de pedidos (abstracta)
 │   ├── gestionPedidosDueno.py      # Gestión para dueños
 │   ├── gestionPedidosUsuarios.py   # Gestión para usuarios
+│   ├── gestor_central_pedidos.py   # Gestor central (Singleton)
+│   ├── factory_tipos_pedido.py     # Factory de tipos (Factory Pattern)
+│   ├── sistema_beneficios.py       # Sistema de beneficios
 │   └── pagar.py                    # Métodos de pago
-├── vista/                          # Interfaz de usuario
-│   └── interfaz.py                 # Sistema de consola
 └── archivos_test/                  # Archivos JSON para testing
     ├── usuario_test.json
     ├── producto_test.json
@@ -97,6 +103,37 @@ MetodologiaProblema2/
     ├── producto_update.json
     ├── pedido_update.json
     └── estado_patch.json
+```
+
+## 🏗️ Arquitectura MVC
+
+**UVShop implementa correctamente el patrón Model-View-Controller:**
+
+- **📱 Vista (View)**: `vista_rest.py` - API REST endpoints, manejo HTTP, serialización JSON
+- **🎛️ Controlador (Controller)**: Lógica de negocio, validaciones, patrones de diseño
+- **🗄️ Modelo (Model)**: Entidades, acceso a datos, persistencia
+
+Ver `ARQUITECTURA_MVC.md` para documentación detallada.
+
+## 🚀 Ejecución del Sistema
+
+### Iniciar Servidor REST (Arquitectura MVC)
+```bash
+# Ejecutar el servidor con arquitectura MVC
+python main.py
+
+# El servidor estará disponible en:
+# http://localhost:5000/api
+```
+
+### Verificar Funcionamiento
+```bash
+# Opción 1: Test automatizado (recomendado)
+python test_todos_metodos.py
+
+# Opción 2: Verificar manualmente
+curl http://localhost:5000/api
+curl http://localhost:5000/api/metodos
 ```
 
 ## 🌐 API REST - Ejemplos de Uso
