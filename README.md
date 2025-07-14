@@ -4,6 +4,10 @@ Sistema completo de e-commerce con API REST, implementando 3 patrones de diseño
 
 ## 👥 Integrantes
 
+- Dante Chavez
+- Nikolas Lagos  
+- Franko Moraga
+- Gabriel Oneto
 
 ### API REST (Puerto 5000)
 - **Gestión de Usuarios**: Crear, consultar usuarios (GET, POST)
